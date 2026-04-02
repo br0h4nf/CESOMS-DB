@@ -560,10 +560,10 @@ def create_event():
                     form_values=form_values,
                 )
 
-            org_ids = {item["orgId"] for item in options["organizations"]}
-            location_ids = {item["locationId"] for item in options["locations"]}
-            category_ids = {item["categoryId"] for item in options["categories"]}
-            term_ids = {item["termId"] for item in options["terms"]}
+            org_ids = {str(item["orgId"]) for item in options["organizations"]}
+            location_ids = {str(item["locationId"]) for item in options["locations"]}
+            category_ids = {str(item["categoryId"]) for item in options["categories"]}
+            term_ids = {str(item["termId"]) for item in options["terms"]}
 
             if form_values["org_id"] not in org_ids:
                 flash("Choose a valid organization.", "error")

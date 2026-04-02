@@ -69,7 +69,7 @@
               <select name="org_id" required>
                 <option value="">Select organization</option>
                 {% for org in options.organizations %}
-                <option value="{{ org.orgId }}" {% if form_values.org_id == org.orgId %}selected{% endif %}>
+                <option value="{{ org.orgId }}" {% if form_values.org_id == (org.orgId|string) %}selected{% endif %}>
                   {{ org.orgName }} ({{ org.orgId }})
                 </option>
                 {% endfor %}
@@ -81,7 +81,7 @@
               <select name="location_id" required>
                 <option value="">Select location</option>
                 {% for location in options.locations %}
-                <option value="{{ location.locationId }}" {% if form_values.location_id == location.locationId %}selected{% endif %}>
+                <option value="{{ location.locationId }}" {% if form_values.location_id == (location.locationId|string) %}selected{% endif %}>
                   {{ location.locationName }} ({{ location.locationId }})
                 </option>
                 {% endfor %}
@@ -93,7 +93,7 @@
               <select name="category_id" required>
                 <option value="">Select category</option>
                 {% for category in options.categories %}
-                <option value="{{ category.categoryId }}" {% if form_values.category_id == category.categoryId %}selected{% endif %}>
+                <option value="{{ category.categoryId }}" {% if form_values.category_id == (category.categoryId|string) %}selected{% endif %}>
                   {{ category.categoryName }} ({{ category.categoryId }})
                 </option>
                 {% endfor %}
@@ -105,7 +105,7 @@
               <select name="term_id" required>
                 <option value="">Select term</option>
                 {% for term in options.terms %}
-                <option value="{{ term.termId }}" {% if form_values.term_id == term.termId %}selected{% endif %}>
+                <option value="{{ term.termId }}" {% if form_values.term_id == (term.termId|string) %}selected{% endif %}>
                   {{ term.termName }} ({{ term.termId }})
                 </option>
                 {% endfor %}

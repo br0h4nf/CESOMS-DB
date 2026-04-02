@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+<p class="lead">Choose a role and enter an ID to access the system.</p>
+
+<form method="POST" class="form-card">
+    <label>User Type</label>
+    <select name="user_type" required>
+        <option value="student">Student</option>
+        <option value="admin">Administrator</option>
+    </select>
+
+    <label>User ID</label>
+    <input type="number" name="user_id" required>
+
+    <button type="submit" class="btn">Login</button>
+</form>
+{% endblock %}

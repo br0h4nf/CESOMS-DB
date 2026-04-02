@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Sign-Ups | CESOMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <div class="ambient ambient-c"></div>
+
+    <div class="app-shell my-signups-shell">
+      <header class="topbar">
+        <div class="brand-copy">
+          <p class="eyebrow">Student portal</p>
+          <h1>My Event Sign-Ups</h1>
+          <p class="lead">
+            {{ student.firstName }} {{ student.lastName }} ({{ student.studentId }})
+          </p>
+        </div>
+
+        <div class="status-card">
+          <span class="status-pill">Logged in as student</span>
+          <p class="status-line">{{ signups|length }} registration record{{ "" if signups|length == 1 else "s" }}</p>
+          <a class="button-ghost inline-action" href="{{ url_for('create_event') }}">Create Event</a>
+          <a class="button-ghost inline-action" href="{{ url_for('logout') }}">Log out</a>
+        </div>
+      </header>
+
+      <main class="content-panel">
+        <p class="greeting-line">Hi {{ student.firstName }} {{ student.lastName }}, welcome back.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}
+          <p class="flash-message flash-{{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Personal records</p>
+            <h3>Registrations linked to your account</h3>
+          </div>
+        </div>
+
+        {% if signups %}
+        <div class="table-wrapper signup-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Organization</th>
+                <th>Start</th>
+                <th>Location</th>
+                <th>Registration Status</th>
+                <th>Event Status</th>
+                <th>Registered At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for signup in signups %}
+              <tr>
+                <td>
+                  <strong>{{ signup.eventTitle }}</strong><br />
+                  <span class="mini-text">{{ signup.eventId }}</span>
+                </td>
+                <td>{{ signup.organizationName or "Unassigned" }}</td>
+                <td>{{ signup.startDateTime or "TBD" }}</td>
+                <td>
+                  {{ signup.locationName or "TBD" }}
+                  {% if signup.isVirtual %}
+                  <span class="meta-chip alt">Virtual</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="status-tag status-registration">{{ signup.registrationStatus }}</span>
+                </td>
+                <td>
+                  <span class="status-tag status-event">{{ signup.eventStatus }}</span>
+                </td>
+                <td>{{ signup.registeredAt }}</td>
+                <td>
+                  {% if signup.registrationStatus in ["Registered", "Waitlisted"] %}
+                  <form method="POST" action="{{ url_for('unregister_event') }}" class="inline-form">
+                    <input type="hidden" name="event_id" value="{{ signup.eventId }}" />
+                    <button type="submit" class="button-ghost table-action">Unregister</button>
+                  </form>
+                  {% else %}
+                  <span class="mini-text">No action</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <article class="event-card">
+          <h4>No sign-ups yet</h4>
+          <p class="event-meta">
+            You are logged in, but no records were found in <code>REGISTRATION</code> for this student account.
+          </p>
+        </article>
+        {% endif %}
+
+        <div class="panel-heading signup-secondary-heading">
+          <div>
+            <p class="eyebrow">Discover events</p>
+            <h3>Available events to register</h3>
+          </div>
+        </div>
+
+        {% if available_events %}
+        <div class="table-wrapper signup-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Organization</th>
+                <th>Start</th>
+                <th>Location</th>
+                <th>Seats</th>
+                <th>My Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in available_events %}
+              <tr>
+                <td>
+                  <strong>{{ event.eventTitle }}</strong><br />
+                  <span class="mini-text">{{ event.eventId }}</span>
+                </td>
+                <td>{{ event.organizationName or "Unassigned" }}</td>
+                <td>{{ event.startDateTime or "TBD" }}</td>
+                <td>
+                  {{ event.locationName or "TBD" }}
+                  {% if event.isVirtual %}
+                  <span class="meta-chip alt">Virtual</span>
+                  {% endif %}
+                </td>
+                <td>{{ event.registeredCount }}/{{ event.capacity }}</td>
+                <td>
+                  {% if event.myRegistrationStatus %}
+                  <span class="status-tag status-registration">{{ event.myRegistrationStatus }}</span>
+                  {% else %}
+                  <span class="mini-text">Not registered</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if event.myRegistrationStatus in ["Registered", "Waitlisted"] %}
+                  <span class="mini-text">Already active</span>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('register_event') }}" class="inline-form">
+                    <input type="hidden" name="event_id" value="{{ event.eventId }}" />
+                    <button type="submit" class="button-solid table-action">
+                      {{ "Register Again" if event.myRegistrationStatus == "Cancelled" else "Register" }}
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <article class="event-card">
+          <h4>No available events</h4>
+          <p class="event-meta">
+            There are no approved or scheduled events open for registration right now.
+          </p>
+        </article>
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>

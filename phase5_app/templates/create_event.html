@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Create Event{% endblock %}
+
+{% block content %}
+<h1>Create Event</h1>
+
+<form method="POST" class="form-card">
+    <label>Organization</label>
+    <select name="org_id" required>
+        {% for org in organizations %}
+            <option value="{{ org.OrgID }}">{{ org.OrgName }} (ID: {{ org.OrgID }})</option>
+        {% endfor %}
+    </select>
+
+    <label>Location</label>
+    <select name="location_id" required>
+        {% for location in locations %}
+            <option value="{{ location.LocationID }}">{{ location.LocationName }} (ID: {{ location.LocationID }})</option>
+        {% endfor %}
+    </select>
+
+    <label>Category</label>
+    <select name="category_id" required>
+        {% for category in categories %}
+            <option value="{{ category.CategoryID }}">{{ category.CategoryName }} (ID: {{ category.CategoryID }})</option>
+        {% endfor %}
+    </select>
+
+    <label>Academic Term</label>
+    <select name="term_id" required>
+        {% for term in terms %}
+            <option value="{{ term.TermID }}">{{ term.TermName }} (ID: {{ term.TermID }})</option>
+        {% endfor %}
+    </select>
+
+    <label>Title</label>
+    <input type="text" name="title" required>
+
+    <label>Description</label>
+    <textarea name="description" rows="4" required></textarea>
+
+    <label>Capacity</label>
+    <input type="number" name="capacity" min="0" required>
+
+    <label>Start Date and Time</label>
+    <input type="datetime-local" name="start_datetime" required>
+
+    <label>End Date and Time</label>
+    <input type="datetime-local" name="end_datetime" required>
+
+    <button type="submit" class="btn">Submit Event</button>
+</form>
+{% endblock %}

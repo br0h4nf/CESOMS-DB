@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<h1>Register for Event</h1>
+
+<div class="card">
+    <h2>{{ event.Title }}</h2>
+    <p><strong>Event ID:</strong> {{ event.EventID }}</p>
+    <p><strong>Status:</strong> {{ event.EventStatus }}</p>
+</div>
+
+<form method="POST" class="form-card">
+    <label>Student ID</label>
+    <input type="number" name="student_id" required>
+
+    <button type="submit" class="btn">Register</button>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Student Memberships{% endblock %}
+
+{% block content %}
+<h1>Memberships for {{ student.FirstName }} {{ student.LastName }}</h1>
+
+{% if memberships %}
+    <div class="grid">
+        {% for membership in memberships %}
+            <div class="card">
+                <h2>{{ membership.OrgName }}</h2>
+                <p><strong>Organization ID:</strong> {{ membership.OrgID }}</p>
+                <p><strong>Description:</strong> {{ membership.Description }}</p>
+                <p><strong>Organization Status:</strong> {{ membership.OrgStatus }}</p>
+                <p><strong>Member Role:</strong> {{ membership.MemberRole }}</p>
+                <p><strong>Join Date:</strong> {{ membership.JoinDate }}</p>
+                <p><strong>Leave Date:</strong> {{ membership.LeaveDate if membership.LeaveDate else "Still Active" }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>This student has no organization memberships.</p>
+{% endif %}
+
+<a class="btn" href="{{ url_for('student_profile', student_id=student.StudentID) }}">Back to Profile</a>
+{% endblock %}

@@ -1,0 +1,8 @@
+.codex
+.DS_Store
+.DB_info.txt
+DB_info.txt
+db_info.txt
+DB_CONFIG.txt
+*.secret.txt
+!DB_info.example.txt

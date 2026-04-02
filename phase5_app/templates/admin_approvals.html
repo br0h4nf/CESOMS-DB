@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Approvals{% endblock %}
+
+{% block content %}
+<h1>Submitted Events Awaiting Review</h1>
+
+{% if events %}
+    <div class="grid">
+        {% for event in events %}
+            <div class="card">
+                <h2>{{ event.Title }}</h2>
+                <p><strong>Event ID:</strong> {{ event.EventID }}</p>
+                <p><strong>Organization:</strong> {{ event.OrgName }}</p>
+                <p><strong>Start:</strong> {{ event.StartDateTime }}</p>
+                <p><strong>End:</strong> {{ event.EndDateTime }}</p>
+                <p><strong>Status:</strong> {{ event.EventStatus }}</p>
+
+                <form method="POST" action="{{ url_for('approve_event', event_id=event.EventID) }}" class="inline-form">
+                    <label>Admin ID</label>
+                    <input type="number" name="admin_id" required>
+                    <button type="submit" class="btn">Approve</button>
+                </form>
+
+                <form method="POST" action="{{ url_for('reject_event', event_id=event.EventID) }}" class="inline-form">
+                    <label>Admin ID</label>
+                    <input type="number" name="admin_id" required>
+                    <button type="submit" class="btn danger">Reject</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No submitted events are awaiting approval.</p>
+{% endif %}
+{% endblock %}

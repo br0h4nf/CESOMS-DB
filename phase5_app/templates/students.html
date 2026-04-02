@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Students{% endblock %}
+
+{% block content %}
+<h1>Students</h1>
+<p class="lead">View all students currently stored in the system.</p>
+
+{% if students %}
+    <div class="grid">
+        {% for student in students %}
+            <div class="card">
+                <h2>{{ student.FirstName }} {{ student.LastName }}</h2>
+                <p><strong>Student ID:</strong> {{ student.StudentID }}</p>
+                <p><strong>Email:</strong> {{ student.Email }}</p>
+                <p><strong>Class Year:</strong> {{ student.ClassYear }}</p>
+                <p><strong>Major:</strong> {{ student.Major }}</p>
+                <p><strong>Status:</strong> {{ student.AccountStatus }}</p>
+
+                <a class="btn" href="{{ url_for('student_profile', student_id=student.StudentID) }}">View Profile</a>
+                <a class="btn" href="{{ url_for('student_registrations', student_id=student.StudentID) }}">Registrations</a>
+                <a class="btn" href="{{ url_for('student_memberships', student_id=student.StudentID) }}">Memberships</a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No students found.</p>
+{% endif %}
+{% endblock %}

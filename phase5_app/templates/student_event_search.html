@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Search Events{% endblock %}
+
+{% block content %}
+<h1>Search and Filter Events</h1>
+<p class="lead">Students can browse approved and scheduled events by keyword, category, or organization.</p>
+
+<form method="GET" class="form-card">
+    <label>Search by Title or Description</label>
+    <input type="text" name="search" value="{{ selected_search }}">
+
+    <label>Filter by Category</label>
+    <select name="category">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+            <option value="{{ category.CategoryID }}"
+                {% if selected_category == category.CategoryID|string %}selected{% endif %}>
+                {{ category.CategoryName }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Filter by Organization</label>
+    <select name="organization">
+        <option value="">All Organizations</option>
+        {% for org in organizations %}
+            <option value="{{ org.OrgID }}"
+                {% if selected_organization == org.OrgID|string %}selected{% endif %}>
+                {{ org.OrgName }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn">Apply Filters</button>
+</form>
+
+{% if events %}
+    <div class="grid">
+        {% for event in events %}
+            <div class="card">
+                <h2>{{ event.Title }}</h2>
+                <p><strong>Organization:</strong> {{ event.OrgName }}</p>
+                <p><strong>Category:</strong> {{ event.CategoryName }}</p>
+                <p><strong>Location:</strong> {{ event.LocationName }}</p>
+                <p><strong>Term:</strong> {{ event.TermName }}</p>
+                <p><strong>Start:</strong> {{ event.StartDateTime }}</p>
+                <p><strong>End:</strong> {{ event.EndDateTime }}</p>
+                <p><strong>Capacity:</strong> {{ event.Capacity }}</p>
+                <p><strong>Status:</strong> {{ event.EventStatus }}</p>
+                <p>{{ event.Description }}</p>
+                <a class="btn" href="{{ url_for('register', event_id=event.EventID) }}">Register by Event Page</a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No events matched your search criteria.</p>
+{% endif %}
+{% endblock %}

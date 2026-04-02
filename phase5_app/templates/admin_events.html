@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Events{% endblock %}
+
+{% block content %}
+<h1>All Events</h1>
+
+{% if events %}
+    <div class="grid">
+        {% for event in events %}
+            <div class="card">
+                <h2>{{ event.Title }}</h2>
+                <p><strong>Event ID:</strong> {{ event.EventID }}</p>
+                <p><strong>Organization:</strong> {{ event.OrgName }}</p>
+                <p><strong>Category:</strong> {{ event.CategoryName }}</p>
+                <p><strong>Location:</strong> {{ event.LocationName }}</p>
+                <p><strong>Start:</strong> {{ event.StartDateTime }}</p>
+                <p><strong>End:</strong> {{ event.EndDateTime }}</p>
+                <p><strong>Status:</strong> {{ event.EventStatus }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No events found.</p>
+{% endif %}
+{% endblock %}

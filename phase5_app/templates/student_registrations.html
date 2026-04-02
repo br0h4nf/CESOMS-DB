@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registrations{% endblock %}
+
+{% block content %}
+<h1>Registrations for {{ student.FirstName }} {{ student.LastName }}</h1>
+
+{% if registrations %}
+    <div class="grid">
+        {% for reg in registrations %}
+            <div class="card">
+                <h2>{{ reg.Title }}</h2>
+                <p><strong>Event ID:</strong> {{ reg.EventID }}</p>
+                <p><strong>Organization:</strong> {{ reg.OrgName }}</p>
+                <p><strong>Location:</strong> {{ reg.LocationName }}</p>
+                <p><strong>Start:</strong> {{ reg.StartDateTime }}</p>
+                <p><strong>End:</strong> {{ reg.EndDateTime }}</p>
+                <p><strong>Registration Status:</strong> {{ reg.RegistrationStatus }}</p>
+                <p><strong>Event Status:</strong> {{ reg.EventStatus }}</p>
+                <p><strong>Registered At:</strong> {{ reg.RegisteredAt }}</p>
+
+                {% if reg.RegistrationStatus != 'Cancelled' %}
+                    <form method="POST"
+                          action="{{ url_for('cancel_registration', student_id=student.StudentID, event_id=reg.EventID) }}">
+                        <button type="submit" class="btn danger">Cancel Registration</button>
+                    </form>
+                {% else %}
+                    <p><em>This registration has already been cancelled.</em></p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>This student has no event registrations.</p>
+{% endif %}
+
+<a class="btn" href="{{ url_for('student_profile', student_id=student.StudentID) }}">Back to Profile</a>
+{% endblock %}

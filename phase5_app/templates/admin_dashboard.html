@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1>Admin Dashboard</h1>
+<p class="lead">Administrative overview of event approvals and system activity.</p>
+
+<div class="grid">
+    <div class="card">
+        <h2>Submitted Events</h2>
+        <p>{{ submitted_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Approved Events</h2>
+        <p>{{ approved_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Rejected Events</h2>
+        <p>{{ rejected_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Administrators</h2>
+        <p>{{ admin_count }}</p>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h2>Review Submitted Events</h2>
+        <p>Approve or reject event submissions.</p>
+        <a class="btn" href="{{ url_for('admin_approvals') }}">Open Approvals</a>
+    </div>
+
+    <div class="card">
+        <h2>View All Events</h2>
+        <p>See the full list of events regardless of status.</p>
+        <a class="btn" href="{{ url_for('admin_events') }}">View Events</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Student Self Registration{% endblock %}
+
+{% block content %}
+<h1>Student Self Registration</h1>
+<p class="lead">Enter a student ID and choose an approved or scheduled event from the list below.</p>
+
+<form method="POST" class="form-card">
+    <label>Student ID</label>
+    <input type="number" name="student_id" required>
+
+    <label>Select Event</label>
+    <select name="event_id" required>
+        <option value="">Choose an event</option>
+        {% for event in events %}
+            <option value="{{ event.EventID }}">
+                {{ event.Title }} | {{ event.OrgName }} | {{ event.StartDateTime }} | {{ event.LocationName }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn">Register Student</button>
+</form>
+
+{% if events %}
+    <div class="grid">
+        {% for event in events %}
+            <div class="card">
+                <h2>{{ event.Title }}</h2>
+                <p><strong>Event ID:</strong> {{ event.EventID }}</p>
+                <p><strong>Organization:</strong> {{ event.OrgName }}</p>
+                <p><strong>Category:</strong> {{ event.CategoryName }}</p>
+                <p><strong>Location:</strong> {{ event.LocationName }}</p>
+                <p><strong>Start:</strong> {{ event.StartDateTime }}</p>
+                <p><strong>End:</strong> {{ event.EndDateTime }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No available events were found.</p>
+{% endif %}
+{% endblock %}

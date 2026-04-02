@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Student Profile{% endblock %}
+
+{% block content %}
+<h1>Student Profile</h1>
+
+<div class="card">
+    <h2>{{ student.FirstName }} {{ student.LastName }}</h2>
+    <p><strong>Student ID:</strong> {{ student.StudentID }}</p>
+    <p><strong>Email:</strong> {{ student.Email }}</p>
+    <p><strong>Class Year:</strong> {{ student.ClassYear }}</p>
+    <p><strong>Major:</strong> {{ student.Major }}</p>
+    <p><strong>Account Status:</strong> {{ student.AccountStatus }}</p>
+</div>
+
+<div class="card">
+    <h3>Student Actions</h3>
+    <a class="btn" href="{{ url_for('student_registrations', student_id=student.StudentID) }}">View Registrations</a>
+    <a class="btn" href="{{ url_for('student_memberships', student_id=student.StudentID) }}">View Memberships</a>
+    <a class="btn" href="{{ url_for('students') }}">Back to Students</a>
+</div>
+{% endblock %}

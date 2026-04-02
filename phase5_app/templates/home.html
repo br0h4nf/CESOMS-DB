@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Campus Event Management System</h1>
+<p class="lead">
+    This app allows students to view events and register, organization officers to create events,
+    and administrators to review submitted events.
+</p>
+
+<div class="grid">
+    <div class="card">
+        <h2>View Events</h2>
+        <p>See all approved and scheduled campus events.</p>
+        <a class="btn" href="{{ url_for('events') }}">Go to Events</a>
+    </div>
+
+    <div class="card">
+        <h2>Add Student</h2>
+        <p>Add a new student into the system.</p>
+        <a class="btn" href="{{ url_for('add_student') }}">Add Student</a>
+    </div>
+
+    <div class="card">
+        <h2>Create Event</h2>
+        <p>Organization officers can create a new event submission.</p>
+        <a class="btn" href="{{ url_for('create_event') }}">Create Event</a>
+    </div>
+
+    <div class="card">
+        <h2>Admin Approvals</h2>
+        <p>Review submitted events and approve or reject them.</p>
+        <a class="btn" href="{{ url_for('admin_approvals') }}">Open Approvals</a>
+    </div>
+    
+    <div class="card">
+        <h2>Students</h2>
+        <p>Browse student profiles, registrations, and memberships.</p>
+        <a class="btn" href="{{ url_for('students') }}">View Students</a>
+    </div>
+
+    <div class="card">
+        <h2>Search Events</h2>
+        <p>Students can search and filter approved or scheduled events.</p>
+        <a class="btn" href="{{ url_for('student_event_search') }}">Search Events</a>
+    </div>
+
+    <div class="card">
+        <h2>Student Self Registration</h2>
+        <p>Students can register themselves for available events.</p>
+        <a class="btn" href="{{ url_for('student_self_register') }}">Register for Event</a>
+    </div>
+
+    <div class="card">
+        <h2>Admin Dashboard</h2>
+        <p>Access admin tools for reviewing and managing events.</p>
+        <a class="btn" href="{{ url_for('admin_dashboard') }}">Open Admin</a>
+    </div>
+
+</div>
+{% endblock %}

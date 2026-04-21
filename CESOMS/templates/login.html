@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Login | CESOMS</title>
+    <title>Account Login | CESOMS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body class="auth-body">
@@ -14,9 +14,9 @@
     <main class="auth-shell">
       <section class="auth-card">
         <p class="eyebrow">Campus Event &amp; Student Organization Management System</p>
-        <h1>Student Login</h1>
+        <h1>Account Login</h1>
         <p class="auth-copy">
-          Sign in with your Student ID and school email to view your personal event sign-ups.
+          Sign in with the account type that matches your CESOMS privileges to open the correct dashboard.
         </p>
 
         {% if error %}
@@ -25,13 +25,21 @@
 
         <form method="POST" class="auth-form">
           <label class="field">
-            <span>Student ID</span>
+            <span>Account Type</span>
+            <select name="account_type" required>
+              <option value="student" {% if form_values.account_type == "student" %}selected{% endif %}>Student or Officer</option>
+              <option value="admin" {% if form_values.account_type == "admin" %}selected{% endif %}>Administrator</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Account ID</span>
             <input
               type="text"
-              name="student_id"
+              name="account_id"
               autocomplete="username"
-              placeholder="STU-101"
-              value="{{ form_values.student_id }}"
+              placeholder="STU-101 or ADM-10"
+              value="{{ form_values.account_id }}"
               required
             />
           </label>
@@ -50,6 +58,10 @@
 
           <button type="submit" class="button-solid">Sign In</button>
         </form>
+
+        <p class="auth-note">
+          New here? <a href="{{ url_for('signup') }}">Create a student account</a>.
+        </p>
 
         <p class="auth-note">
           Want the full schema demo? <a href="{{ url_for('dashboard_page') }}">Open dashboard view</a>.

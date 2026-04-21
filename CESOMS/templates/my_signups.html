@@ -22,9 +22,14 @@
         </div>
 
         <div class="status-card">
-          <span class="status-pill">Logged in as student</span>
+          <span class="status-pill">Logged in as {{ current_role }}</span>
           <p class="status-line">{{ signups|length }} registration record{{ "" if signups|length == 1 else "s" }}</p>
+          {% if current_role == "officer" %}
+          <a class="button-ghost inline-action" href="{{ url_for('officer_dashboard') }}">Officer Dashboard</a>
+          {% endif %}
+          {% if can_create_event %}
           <a class="button-ghost inline-action" href="{{ url_for('create_event') }}">Create Event</a>
+          {% endif %}
           <a class="button-ghost inline-action" href="{{ url_for('logout') }}">Log out</a>
         </div>
       </header>
@@ -47,6 +52,117 @@
             <p class="eyebrow">Personal records</p>
             <h3>Registrations linked to your account</h3>
           </div>
+        </div>
+
+        <div class="panel-heading signup-secondary-heading">
+          <div>
+            <p class="eyebrow">Profile</p>
+            <h3>Update your student information</h3>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="focus-card profile-card-wide">
+            <span class="focus-label">Student profile</span>
+            <h4>Keep your account details current</h4>
+            <form method="POST" action="{{ url_for('update_profile') }}" class="stack-form">
+              <div class="auth-grid">
+                <label class="field">
+                  <span>First Name</span>
+                  <input type="text" name="first_name" value="{{ student.firstName }}" required />
+                </label>
+                <label class="field">
+                  <span>Last Name</span>
+                  <input type="text" name="last_name" value="{{ student.lastName }}" required />
+                </label>
+                <label class="field field-full">
+                  <span>Email</span>
+                  <input type="email" name="email" value="{{ student.email }}" required />
+                </label>
+                <label class="field">
+                  <span>Class Year</span>
+                  <input type="text" name="class_year" value="{{ student.classYear }}" required />
+                </label>
+                <label class="field">
+                  <span>Major</span>
+                  <input type="text" name="major" value="{{ student.major }}" required />
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit" class="button-solid">Save Profile</button>
+                <span class="mini-text">Student ID: {{ student.studentId }} | Status: {{ student.accountStatus }}</span>
+              </div>
+            </form>
+          </article>
+        </div>
+
+        <div class="panel-heading signup-secondary-heading">
+          <div>
+            <p class="eyebrow">Organizations</p>
+            <h3>Memberships and join options</h3>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="focus-card">
+            <span class="focus-label">Active and past memberships</span>
+            <h4>{{ memberships|length }} membership record{{ "" if memberships|length == 1 else "s" }}</h4>
+            {% if memberships %}
+            <ul class="focus-list">
+              {% for membership in memberships %}
+              <li>
+                {{ membership.orgName }} | {{ membership.memberRole }} |
+                {{ "Active" if not membership.leaveDate else "Ended " ~ membership.leaveDate }}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="mini-text">You have not joined any organizations yet.</p>
+            {% endif %}
+          </article>
+
+          <article class="focus-card">
+            <span class="focus-label">Join an organization</span>
+            <h4>Available active organizations</h4>
+            {% if joinable_organizations %}
+            <form method="POST" action="{{ url_for('join_organization') }}" class="stack-form">
+              <label class="field">
+                <span>Choose organization</span>
+                <select name="org_id" required>
+                  <option value="">Select organization</option>
+                  {% for org in joinable_organizations %}
+                  <option value="{{ org.orgId }}">{{ org.orgName }} ({{ org.orgId }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <button type="submit" class="button-solid">Join Organization</button>
+            </form>
+            {% else %}
+            <p class="mini-text">You are already active in every currently available organization.</p>
+            {% endif %}
+          </article>
+
+          <article class="focus-card">
+            <span class="focus-label">Leave an organization</span>
+            <h4>End an active membership</h4>
+            {% set active_memberships = memberships | selectattr("leaveDate", "equalto", None) | list %}
+            {% if active_memberships %}
+            <form method="POST" action="{{ url_for('leave_organization') }}" class="stack-form">
+              <label class="field">
+                <span>Choose organization</span>
+                <select name="org_id" required>
+                  <option value="">Select organization</option>
+                  {% for membership in active_memberships %}
+                  <option value="{{ membership.orgId }}">{{ membership.orgName }} ({{ membership.orgId }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <button type="submit" class="button-ghost">Leave Organization</button>
+            </form>
+            {% else %}
+            <p class="mini-text">No active memberships are available to end.</p>
+            {% endif %}
+          </article>
         </div>
 
         {% if signups %}

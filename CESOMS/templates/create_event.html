@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Event | CESOMS</title>
+    <title>{{ "Edit Event" if form_mode == "edit" else "Create Event" }} | CESOMS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
@@ -15,16 +15,20 @@
       <header class="topbar">
         <div class="brand-copy">
           <p class="eyebrow">Event management</p>
-          <h1>Create a New Event</h1>
+          <h1>{{ "Edit Event" if form_mode == "edit" else "Create a New Event" }}</h1>
           <p class="lead">
-            Build a draft or submitted event record tied to your CESOMS schema.
+            {{ "Update the event record tied to your CESOMS schema." if form_mode == "edit" else "Build a draft or submitted event record tied to your CESOMS schema." }}
           </p>
         </div>
 
         <div class="status-card">
-          <span class="status-pill">Logged in as student</span>
+          <span class="status-pill">Logged in as {{ current_role }}</span>
           <p class="status-line">{{ student.firstName }} {{ student.lastName }}</p>
-          <a class="button-ghost inline-action" href="{{ url_for('my_signups') }}">Back to My Sign-Ups</a>
+          {% if current_role == "officer" %}
+          <a class="button-ghost inline-action" href="{{ url_for('officer_dashboard') }}">Officer Dashboard</a>
+          {% else %}
+          <a class="button-ghost inline-action" href="{{ url_for('my_signups') }}">Student View</a>
+          {% endif %}
           <a class="button-ghost inline-action" href="{{ url_for('logout') }}">Log out</a>
         </div>
       </header>
@@ -51,7 +55,7 @@
           <div class="create-event-grid">
             <label class="field">
               <span>Event ID</span>
-              <input type="text" name="event_id" placeholder="EVT-3001" value="{{ form_values.event_id }}" required />
+              <input type="text" name="event_id" placeholder="EVT-3001" value="{{ form_values.event_id }}" {% if form_mode == "edit" %}readonly{% else %}required{% endif %} />
             </label>
 
             <label class="field">
@@ -122,6 +126,9 @@
               <select name="event_status" required>
                 <option value="Draft" {% if form_values.event_status == "Draft" %}selected{% endif %}>Draft</option>
                 <option value="Submitted" {% if form_values.event_status == "Submitted" %}selected{% endif %}>Submitted</option>
+                {% if form_mode == "edit" %}
+                <option value="Rejected" {% if form_values.event_status == "Rejected" %}selected{% endif %}>Rejected</option>
+                {% endif %}
               </select>
             </label>
 
@@ -137,8 +144,8 @@
           </div>
 
           <div class="create-event-actions">
-            <button type="submit" class="button-solid">Create Event</button>
-            <a class="button-ghost" href="{{ url_for('my_signups') }}">Cancel</a>
+            <button type="submit" class="button-solid">{{ "Save Changes" if form_mode == "edit" else "Create Event" }}</button>
+            <a class="button-ghost" href="{{ url_for('officer_dashboard' if current_role == 'officer' else 'my_signups') }}">Cancel</a>
           </div>
         </form>
       </main>

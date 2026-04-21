@@ -460,6 +460,10 @@ button {
   gap: 10px;
 }
 
+.profile-card-wide {
+  grid-column: 1 / -1;
+}
+
 .focus-list {
   margin: 0;
   padding-left: 18px;
@@ -573,6 +577,10 @@ th {
   z-index: 1;
 }
 
+.auth-shell-wide {
+  width: min(760px, 100%);
+}
+
 .auth-card {
   border-radius: var(--radius-xl);
   padding: 30px;
@@ -602,8 +610,24 @@ th {
   font-weight: 700;
 }
 
+.auth-success {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(31, 111, 109, 0.12);
+  border: 1px solid rgba(21, 78, 84, 0.24);
+  color: var(--teal-deep);
+  font-weight: 700;
+}
+
 .auth-form {
   display: grid;
+  gap: 14px;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -699,9 +723,55 @@ th {
   margin: 0;
 }
 
+.stack-form {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(24, 50, 55, 0.08);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-field {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.checkbox-field input {
+  width: auto;
+  margin: 0;
+}
+
 .table-action {
   padding: 8px 12px;
   font-size: 0.85rem;
+}
+
+.table-link-button {
+  margin-top: 0;
+}
+
+.attendance-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.attendance-form select {
+  min-width: 110px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(24, 50, 55, 0.1);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .signup-secondary-heading {
@@ -738,11 +808,18 @@ th {
   text-decoration: none;
 }
 
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
 @media (max-width: 1080px) {
   .dashboard,
   .hero-panel,
   .split-panel,
-  .topbar {
+  .topbar,
+  .card-grid {
     grid-template-columns: 1fr;
   }
 
@@ -794,6 +871,10 @@ th {
   }
 
   .create-event-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-grid {
     grid-template-columns: 1fr;
   }
 

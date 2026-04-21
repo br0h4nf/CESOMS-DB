@@ -4,7 +4,7 @@ project/
 ├── app.py
 ├── requirements.txt
 ├── templates/
-│   └── index.html
+│   └── **all .html files**
 └── static/
     ├── app.js
     └── styles.css

@@ -600,6 +600,12 @@ th {
   margin: 10px 0 18px;
 }
 
+.auth-hint {
+  margin: -6px 0 18px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
 .auth-error {
   margin: 0 0 16px;
   padding: 10px 12px;

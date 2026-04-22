@@ -18,6 +18,7 @@
         <p class="auth-copy">
           This registration form creates a new <code>STUDENT</code> record with an active account status.
         </p>
+        <p class="auth-hint">Use a password with at least 8 characters.</p>
 
         {% if error %}
         <p class="auth-error">{{ error }}</p>
@@ -57,6 +58,16 @@
             <label class="field field-full">
               <span>Major</span>
               <input type="text" name="major" placeholder="Computer Science" value="{{ form_values.major }}" required />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input type="password" name="password" placeholder="At least 8 characters" required />
+            </label>
+
+            <label class="field">
+              <span>Confirm Password</span>
+              <input type="password" name="confirm_password" placeholder="Re-enter password" required />
             </label>
           </div>
 

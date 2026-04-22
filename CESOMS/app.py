@@ -3,6 +3,7 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, ses
 import mysql.connector
 from mysql.connector import errorcode
 from datetime import date, datetime
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "cesoms-dev-secret")
@@ -72,6 +73,34 @@ def get_connection():
     return mysql.connector.connect(**DB_CONFIG)
 
 
+def ensure_auth_schema():
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS APP_USER (
+                UserID INT AUTO_INCREMENT PRIMARY KEY,
+                AccountType VARCHAR(20) NOT NULL,
+                AccountRefID VARCHAR(50) NOT NULL,
+                PasswordHash VARCHAR(255) NOT NULL,
+                CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                LastPasswordChangedAt DATETIME NULL,
+                UNIQUE KEY uq_app_user_account (AccountType, AccountRefID)
+            )
+        """)
+        conn.commit()
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+ensure_auth_schema()
+
+
 def serialize_value(value):
     if isinstance(value, (datetime, date)):
         return value.isoformat()
@@ -133,6 +162,67 @@ def fetch_student_by_credentials(cursor, student_id, email):
         LIMIT 1
     """, (student_id, email))
     return rows[0] if rows else None
+
+
+def fetch_auth_user(cursor, account_type, account_ref_id):
+    rows = safe_fetch(cursor, """
+        SELECT
+            UserID AS userId,
+            AccountType AS accountType,
+            AccountRefID AS accountRefId,
+            PasswordHash AS passwordHash,
+            CreatedAt AS createdAt,
+            LastPasswordChangedAt AS lastPasswordChangedAt
+        FROM APP_USER
+        WHERE AccountType = %s
+          AND AccountRefID = %s
+        LIMIT 1
+    """, (account_type, account_ref_id))
+    return rows[0] if rows else None
+
+
+def create_auth_user(cursor, account_type, account_ref_id, password):
+    now = datetime.now()
+    cursor.execute("""
+        INSERT INTO APP_USER (
+            AccountType,
+            AccountRefID,
+            PasswordHash,
+            CreatedAt,
+            LastPasswordChangedAt
+        )
+        VALUES (%s, %s, %s, %s, %s)
+    """, (
+        account_type,
+        account_ref_id,
+        generate_password_hash(password),
+        now,
+        now,
+    ))
+
+
+def update_auth_password(cursor, account_type, account_ref_id, password):
+    cursor.execute("""
+        UPDATE APP_USER
+        SET PasswordHash = %s,
+            LastPasswordChangedAt = %s
+        WHERE AccountType = %s
+          AND AccountRefID = %s
+    """, (
+        generate_password_hash(password),
+        datetime.now(),
+        account_type,
+        account_ref_id,
+    ))
+
+
+def count_admin_auth_users(cursor):
+    rows = safe_fetch(cursor, """
+        SELECT COUNT(*) AS total
+        FROM APP_USER
+        WHERE AccountType = 'admin'
+    """)
+    return rows[0]["total"] if rows else 0
 
 
 def fetch_admin_by_id(cursor, admin_id):
@@ -607,6 +697,16 @@ def current_user_role():
     return session.get("user_role")
 
 
+def current_auth_account_type():
+    return "admin" if current_user_role() == "admin" else "student"
+
+
+def current_auth_account_ref_id():
+    if current_user_role() == "admin":
+        return current_admin_id()
+    return current_student_id()
+
+
 def fetch_event_creation_options(cursor, allowed_org_ids=None):
     org_filter = ""
     params = ()
@@ -939,45 +1039,41 @@ def login():
         return redirect(url_for("portal_home"))
 
     error = ""
-    form_values = {"account_type": "student", "account_id": "", "email": ""}
+    form_values = {"account_type": "student", "account_id": ""}
+    show_admin_setup = False
 
     if request.method == "POST":
         form_values["account_type"] = request.form.get("account_type", "student").strip()
         form_values["account_id"] = request.form.get("account_id", "").strip()
-        form_values["email"] = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
 
-        if not form_values["account_id"] or not form_values["email"]:
-            error = "Enter both account ID and email."
+        if not form_values["account_id"] or not password:
+            error = "Enter both account ID and password."
         else:
             conn = None
             cursor = None
             try:
                 conn = get_connection()
                 cursor = conn.cursor()
+                show_admin_setup = count_admin_auth_users(cursor) == 0
 
                 if form_values["account_type"] == "admin":
-                    admin = fetch_admin_by_credentials(
-                        cursor,
-                        form_values["account_id"],
-                        form_values["email"],
-                    )
+                    admin = fetch_admin_by_id(cursor, form_values["account_id"])
+                    auth_user = fetch_auth_user(cursor, "admin", form_values["account_id"])
 
-                    if not admin:
-                        error = "Invalid administrator ID or email."
+                    if not admin or not auth_user or not check_password_hash(auth_user["passwordHash"], password):
+                        error = "Invalid administrator ID or password."
                     elif admin["adminStatus"] != "Active":
                         error = f"Administrator account is {admin['adminStatus']}."
                     else:
                         build_session_for_admin(admin)
                         return redirect(url_for("portal_home"))
                 else:
-                    student = fetch_student_by_credentials(
-                        cursor,
-                        form_values["account_id"],
-                        form_values["email"],
-                    )
+                    student = fetch_student_by_id(cursor, form_values["account_id"])
+                    auth_user = fetch_auth_user(cursor, "student", form_values["account_id"])
 
-                    if not student:
-                        error = "Invalid student ID or email."
+                    if not student or not auth_user or not check_password_hash(auth_user["passwordHash"], password):
+                        error = "Invalid student ID or password."
                     elif student["accountStatus"] != "Active":
                         error = f"Account is {student['accountStatus']}. Contact your administrator."
                     else:
@@ -992,7 +1088,22 @@ def login():
                 if conn:
                     conn.close()
 
-    return render_template("login.html", error=error, form_values=form_values)
+    if request.method == "GET":
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            show_admin_setup = count_admin_auth_users(cursor) == 0
+        except mysql.connector.Error:
+            show_admin_setup = False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return render_template("login.html", error=error, form_values=form_values, show_admin_setup=show_admin_setup)
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -1020,9 +1131,15 @@ def signup():
             "class_year": request.form.get("class_year", "").strip(),
             "major": request.form.get("major", "").strip(),
         }
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
 
         if any(not value for value in form_values.values()):
             error = "Fill in all account fields."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif password != confirm_password:
+            error = "Password confirmation does not match."
         else:
             conn = None
             cursor = None
@@ -1042,6 +1159,8 @@ def signup():
                     error = "That Student ID already exists."
                 elif existing_email:
                     error = "That email address is already in use."
+                elif fetch_auth_user(cursor, "student", form_values["student_id"]):
+                    error = "A login already exists for that student account."
                 else:
                     cursor.execute("""
                         INSERT INTO STUDENT (
@@ -1059,9 +1178,10 @@ def signup():
                         form_values["first_name"],
                         form_values["last_name"],
                         form_values["email"],
-                        form_values["class_year"],
-                        form_values["major"],
-                    ))
+                            form_values["class_year"],
+                            form_values["major"],
+                        ))
+                    create_auth_user(cursor, "student", form_values["student_id"], password)
                     conn.commit()
                     success = "Account created successfully. You can sign in now."
                     form_values = {
@@ -1086,6 +1206,108 @@ def signup():
                     conn.close()
 
     return render_template("signup.html", error=error, success=success, form_values=form_values)
+
+
+@app.route("/setup-admin", methods=["GET", "POST"])
+def setup_admin():
+    if current_user_role():
+        return redirect(url_for("portal_home"))
+
+    error = ""
+    success = ""
+    form_values = {"admin_id": "", "email": ""}
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if count_admin_auth_users(cursor) > 0:
+            return redirect(url_for("login"))
+
+        if request.method == "POST":
+            form_values["admin_id"] = request.form.get("admin_id", "").strip()
+            form_values["email"] = request.form.get("email", "").strip()
+            password = request.form.get("password", "")
+            confirm_password = request.form.get("confirm_password", "")
+
+            if not form_values["admin_id"] or not form_values["email"] or not password:
+                error = "Enter admin ID, email, and password."
+            elif len(password) < 8:
+                error = "Password must be at least 8 characters."
+            elif password != confirm_password:
+                error = "Password confirmation does not match."
+            else:
+                admin = fetch_admin_by_credentials(cursor, form_values["admin_id"], form_values["email"])
+                if not admin:
+                    error = "No active administrator record matched that ID and email."
+                elif admin["adminStatus"] != "Active":
+                    error = f"Administrator account is {admin['adminStatus']}."
+                elif fetch_auth_user(cursor, "admin", form_values["admin_id"]):
+                    error = "That administrator already has login credentials."
+                else:
+                    create_auth_user(cursor, "admin", form_values["admin_id"], password)
+                    conn.commit()
+                    success = "Administrator login created. You can sign in now."
+                    form_values = {"admin_id": "", "email": ""}
+    except mysql.connector.Error:
+        if conn:
+            conn.rollback()
+        error = "Could not initialize the administrator account right now."
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return render_template("setup_admin.html", error=error, success=success, form_values=form_values)
+
+
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    if not current_user_role():
+        return redirect(url_for("login"))
+
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    if not current_password or not new_password:
+        flash("Enter your current and new password.", "error")
+        return redirect(url_for("portal_home"))
+    if len(new_password) < 8:
+        flash("New password must be at least 8 characters.", "error")
+        return redirect(url_for("portal_home"))
+    if new_password != confirm_password:
+        flash("New password confirmation does not match.", "error")
+        return redirect(url_for("portal_home"))
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        account_type = current_auth_account_type()
+        account_ref_id = current_auth_account_ref_id()
+        auth_user = fetch_auth_user(cursor, account_type, account_ref_id)
+        if not auth_user or not check_password_hash(auth_user["passwordHash"], current_password):
+            flash("Current password was incorrect.", "error")
+            return redirect(url_for("portal_home"))
+
+        update_auth_password(cursor, account_type, account_ref_id, new_password)
+        conn.commit()
+        flash("Password changed successfully.", "success")
+    except mysql.connector.Error:
+        if conn:
+            conn.rollback()
+        flash("Could not change the password right now.", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return redirect(url_for("portal_home"))
 
 
 @app.route("/portal")
@@ -1298,6 +1520,141 @@ def admin_dashboard():
         categories=dashboard_data["categories"],
         terms=dashboard_data["terms"],
     )
+
+
+@app.route("/admin/create-user", methods=["POST"])
+def admin_create_user():
+    admin_id, redirect_response = admin_required()
+    if redirect_response:
+        return redirect_response
+
+    account_type = request.form.get("account_type", "").strip()
+    account_id = request.form.get("account_id", "").strip()
+    first_name = request.form.get("first_name", "").strip()
+    last_name = request.form.get("last_name", "").strip()
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
+    class_year = request.form.get("class_year", "").strip()
+    major = request.form.get("major", "").strip()
+    department = request.form.get("department", "").strip()
+
+    if account_type not in {"student", "admin"}:
+        flash("Choose a valid user type to create.", "error")
+        return redirect(url_for("admin_dashboard"))
+    if not account_id or not first_name or not last_name or not email or not password:
+        flash("Fill in all required user fields.", "error")
+        return redirect(url_for("admin_dashboard"))
+    if len(password) < 8:
+        flash("Password must be at least 8 characters.", "error")
+        return redirect(url_for("admin_dashboard"))
+    if password != confirm_password:
+        flash("Password confirmation does not match.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if fetch_auth_user(cursor, account_type, account_id):
+            flash("A login already exists for that account.", "error")
+            return redirect(url_for("admin_dashboard"))
+
+        if account_type == "student":
+            existing_student = fetch_student_by_id(cursor, account_id)
+            existing_email = safe_fetch(cursor, """
+                SELECT StudentID
+                FROM STUDENT
+                WHERE LOWER(Email) = LOWER(%s)
+                  AND StudentID <> %s
+                LIMIT 1
+            """, (email, account_id))
+            if not class_year or not major:
+                flash("Student users need class year and major.", "error")
+                return redirect(url_for("admin_dashboard"))
+            if existing_email:
+                flash("That email is already used by another student.", "error")
+                return redirect(url_for("admin_dashboard"))
+            if existing_student:
+                cursor.execute("""
+                    UPDATE STUDENT
+                    SET FirstName = %s,
+                        LastName = %s,
+                        Email = %s,
+                        ClassYear = %s,
+                        Major = %s,
+                        AccountStatus = 'Active'
+                    WHERE StudentID = %s
+                """, (first_name, last_name, email, class_year, major, account_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO STUDENT (
+                        StudentID,
+                        FirstName,
+                        LastName,
+                        Email,
+                        ClassYear,
+                        Major,
+                        AccountStatus
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, 'Active')
+                """, (account_id, first_name, last_name, email, class_year, major))
+        else:
+            existing_admin = fetch_admin_by_id(cursor, account_id)
+            existing_email = safe_fetch(cursor, """
+                SELECT AdminID
+                FROM ADMINISTRATOR
+                WHERE LOWER(Email) = LOWER(%s)
+                  AND AdminID <> %s
+                LIMIT 1
+            """, (email, account_id))
+            if not department:
+                flash("Administrator users need a department.", "error")
+                return redirect(url_for("admin_dashboard"))
+            if existing_email:
+                flash("That email is already used by another administrator.", "error")
+                return redirect(url_for("admin_dashboard"))
+            if existing_admin:
+                cursor.execute("""
+                    UPDATE ADMINISTRATOR
+                    SET FirstName = %s,
+                        LastName = %s,
+                        Email = %s,
+                        Department = %s,
+                        AdminStatus = 'Active'
+                    WHERE AdminID = %s
+                """, (first_name, last_name, email, department, account_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO ADMINISTRATOR (
+                        AdminID,
+                        FirstName,
+                        LastName,
+                        Email,
+                        Department,
+                        AdminStatus
+                    )
+                    VALUES (%s, %s, %s, %s, %s, 'Active')
+                """, (account_id, first_name, last_name, email, department))
+
+        create_auth_user(cursor, account_type, account_id, password)
+        conn.commit()
+        flash(f"{account_type.title()} user created successfully.", "success")
+    except mysql.connector.Error as exc:
+        if conn:
+            conn.rollback()
+        if exc.errno == errorcode.ER_DUP_ENTRY:
+            flash("That account already exists.", "error")
+        else:
+            flash("Could not create the user right now.", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/create-event", methods=["GET", "POST"])

@@ -18,6 +18,9 @@
         <p class="auth-copy">
           Sign in with the account type that matches your CESOMS privileges to open the correct dashboard.
         </p>
+        <p class="auth-hint">
+          Passwords are stored securely in the database and are never shown back in the interface.
+        </p>
 
         {% if error %}
         <p class="auth-error">{{ error }}</p>
@@ -45,13 +48,12 @@
           </label>
 
           <label class="field">
-            <span>Email</span>
+            <span>Password</span>
             <input
-              type="email"
-              name="email"
-              autocomplete="email"
-              placeholder="student@school.edu"
-              value="{{ form_values.email }}"
+              type="password"
+              name="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
               required
             />
           </label>
@@ -62,6 +64,12 @@
         <p class="auth-note">
           New here? <a href="{{ url_for('signup') }}">Create a student account</a>.
         </p>
+
+        {% if show_admin_setup %}
+        <p class="auth-note">
+          No admin login yet? <a href="{{ url_for('setup_admin') }}">Initialize the first administrator</a>.
+        </p>
+        {% endif %}
 
         <p class="auth-note">
           Want the full schema demo? <a href="{{ url_for('dashboard_page') }}">Open dashboard view</a>.

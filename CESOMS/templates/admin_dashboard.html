@@ -60,6 +60,88 @@
 
         <div class="panel-heading signup-secondary-heading">
           <div>
+            <p class="eyebrow">Authentication</p>
+            <h3>Create users and manage your password</h3>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="focus-card">
+            <span class="focus-label">Create user</span>
+            <h4>Create student or administrator logins</h4>
+            <p class="mini-text">Student users need class year and major. Admin users need a department.</p>
+            <form method="POST" action="{{ url_for('admin_create_user') }}" class="stack-form">
+              <label class="field">
+                <span>User type</span>
+                <select name="account_type" required>
+                  <option value="student">Student</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Account ID</span>
+                <input type="text" name="account_id" placeholder="STU-300 or ADM-30" required />
+              </label>
+              <label class="field">
+                <span>First name</span>
+                <input type="text" name="first_name" required />
+              </label>
+              <label class="field">
+                <span>Last name</span>
+                <input type="text" name="last_name" required />
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" required />
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input type="password" name="password" required />
+              </label>
+              <label class="field">
+                <span>Confirm password</span>
+                <input type="password" name="confirm_password" required />
+              </label>
+              <label class="field">
+                <span>Class year for students</span>
+                <input type="text" name="class_year" placeholder="2028" />
+              </label>
+              <label class="field">
+                <span>Major for students</span>
+                <input type="text" name="major" placeholder="Computer Science" />
+              </label>
+              <label class="field">
+                <span>Department for admins</span>
+                <input type="text" name="department" placeholder="Student Affairs" />
+              </label>
+              <button type="submit" class="button-solid">Create User</button>
+            </form>
+          </article>
+
+          <article class="focus-card">
+            <span class="focus-label">Admin password</span>
+            <h4>Change your administrator password</h4>
+            <p class="mini-text">Choose a password with at least 8 characters.</p>
+            <form method="POST" action="{{ url_for('change_password') }}" class="stack-form">
+              <label class="field">
+                <span>Current password</span>
+                <input type="password" name="current_password" required />
+              </label>
+              <label class="field">
+                <span>New password</span>
+                <input type="password" name="new_password" required />
+              </label>
+              <label class="field">
+                <span>Confirm new password</span>
+                <input type="password" name="confirm_password" required />
+              </label>
+              <button type="submit" class="button-solid">Change Password</button>
+            </form>
+          </article>
+        </div>
+
+        <div class="panel-heading signup-secondary-heading">
+          <div>
             <p class="eyebrow">Approval queue</p>
             <h3>Event review workflow</h3>
           </div>
